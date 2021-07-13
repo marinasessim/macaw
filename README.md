@@ -1,7 +1,7 @@
-MACAW
+Macaw
 =====
 
-MACAW: A Mesoscale Ablation Modeling Tool
+Macaw: A Mesoscale Ablation Modeling Tool
 
 "Fork macaw" to create a new MOOSE-based application.
 
