@@ -1,7 +1,13 @@
 [Tests]
-  [test]
+  [test1]
     type = 'Exodiff'
     input = 'fiber_direction.i'
     exodiff = 'fiber_direction_exodus.e'
+  []
+
+  [test2]
+    type = 'Exodiff'
+    input = 'th_cond_tensor_rotation.i'
+    exodiff = 'th_cond_tensor_rotation_exodus.e'
   []
 []
