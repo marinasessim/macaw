@@ -1,0 +1,7 @@
+[Tests]
+  [test]
+    type = 'Exodiff'
+    input = 'fiber_direction.i'
+    exodiff = 'fiber_direction_exodus.e'
+  []
+[]
