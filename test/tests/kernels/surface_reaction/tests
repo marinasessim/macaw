@@ -1,7 +1,9 @@
 [Tests]
-  [test]
+  [1_reaction_kernel]
     type = 'Exodiff'
     input = 'surface_reaction.i'
     exodiff = 'surface_reaction_exodus.e'
+
+    requirement = 'This tests the phase-field surface reaction kernel by comparing the final number of atoms in the system.'
   []
 []
