@@ -1,12 +1,11 @@
 #------------------------------------------------------------------------------#
-# Fiber Direction Calculation
-# Nondimensional parameters with convertion factors:
-# lo = 2.1524e-04 micron
-# to = 4.3299e-04 s
-# eo = 3.9 eV
-# This file calculates the direction of a fiber that is initialized using a
-# bounding box IC. The direction calculation is based on the artificial heat
-# flux approach from Schneider et al 2016.
+# Fiber direction calculation
+# This step1 pseudo-simulation is used to compute the direction vectors of the
+# carbon fibers, which is later used as the reference direction to perform a
+# rotation of the coordinate system of the thermal conductivity tensor. We align
+# the x-direction of the original tensor with the local direction vector of the
+# fibers. The diffuse interface is simulataneously generated from the sharp
+# binary image used as the initial condition for the fibers.
 #------------------------------------------------------------------------------#
 
 #------------------------------------------------------------------------------#
@@ -17,12 +16,16 @@
 
     xmin = 0
     xmax = 557280 # 120 microns
-    nx = 12
+    nx = 120
 
     ymin = 0
     ymax = 557280 # 120 microns
-    ny = 12
+    ny = 120
+
+    elem_type = QUAD4
   []
+
+  uniform_refine = 2
 []
 
 #------------------------------------------------------------------------------#
@@ -40,43 +43,57 @@
 
 #------------------------------------------------------------------------------#
 [Functions]
-  # DIRECTION VERIFICATION
-  # Calculate average direction in the fiber
-  [dir_x_func]
-    type = ParsedFunction
-    value = 'dir_x_pp / (int_h_f)'
-    vars = 'dir_x_pp int_h_f'
-    vals = 'dir_x_pp int_h_f'
+  # IMAGE READER
+  [ic_func_eta_f]
+    type = ImageFunction
+    file = multiple_fibers.tif
+    threshold = 170
+    upper_value = 0.0 # white is zero
+    lower_value = 1.0 # black is one
   []
-  [dir_y_func]
-    type = ParsedFunction
-    value = 'dir_y_pp / (int_h_f)'
-    vars = 'dir_y_pp int_h_f'
-    vals = 'dir_y_pp int_h_f'
-  []
-
-  [ave_angle_degree_func]
-    type = ParsedFunction
-    value = 'atan(ave_dir_y/ave_dir_x)*180/pi'
-    vars = 'ave_dir_x ave_dir_y'
-    vals = 'ave_dir_x ave_dir_y'
-  []
-
-  [ave_angle_rad_func]
-    type = ParsedFunction
-    value = 'atan(ave_dir_y/ave_dir_x)'
-    vars = 'ave_dir_x ave_dir_y'
-    vals = 'ave_dir_x ave_dir_y'
+  [ic_func_eta_g]
+    type = ImageFunction
+    file = multiple_fibers.tif
+    threshold = 170
+    upper_value = 1.0 # white is one
+    lower_value = 0.0 # black is zero
   []
 
   # Temperature IC
   [ic_func_Tx]
     type = ParsedFunction
-    value = '(1000-2000)/557280 * x + 2000'
+    value = '(1000-2000)/464400 * x + 2000'
   []
   [ic_func_Ty]
     type = ParsedFunction
-    value = '(1000-2000)/557280 * y + 2000'
+    value = '(1000-2000)/464400 * y + 2000'
+  []
+[]
+
+
+#------------------------------------------------------------------------------#
+[ICs]
+  # IMAGE READER
+  [IC_eta_f]
+    type = FunctionIC
+    variable = eta_f
+    function = ic_func_eta_f
+  []
+  [IC_eta_g]
+    type = FunctionIC
+    variable = eta_g
+    function = ic_func_eta_g
+  []
+
+  [IC_Tx]
+    type = FunctionIC
+    variable = T_x
+    function = ic_func_Tx
+  []
+  [IC_Ty]
+    type = FunctionIC
+    variable = T_y
+    function = ic_func_Ty
   []
 []
 
@@ -94,70 +111,54 @@
   []
   [T_y]
   []
-
-  # AEH
-  [Tx_AEH] #Temperature used for the x-component of the AEH solve
-    initial_condition = 1500
-  []
-  [Ty_AEH] #Temperature used for the y-component of the AEH solve
-    initial_condition = 1500
-  []
 []
 
 #------------------------------------------------------------------------------#
-[ICs]
-  [IC_eta_f]
-    type = BoundingBoxIC
-    variable = eta_f
-
-    x1 = 232200 # 50
-    y1 = 46440 # 10
-
-    x2 = 325080 # 70
-    y2 = 510840 # 110
-
-    inside = 1.0
-    outside = 0.0
-
-    int_width = 4644
-  []
-  [IC_eta_g]
-    type = BoundingBoxIC
-    variable = eta_g
-
-    x1 = 232200 # 50
-    y1 = 46440 # 10
-
-    x2 = 325080 # 70
-    y2 = 510840 # 110
-
-    inside = 0.0
-    outside = 1.0
-
-    int_width = 4644
-  []
-
-  [IC_Tx]
-    type = FunctionIC
-    variable = T_x
-    function = ic_func_Tx
-  []
-  [IC_Ty]
-    type = FunctionIC
-    variable = T_y
-    function = ic_func_Ty
-  []
-[]
-
-#------------------------------------------------------------------------------#
+# Bnds stuff
 [AuxVariables]
-  # DIRECTION VERIFICATION
-  [dir_x]
+  [var_00]
     order = CONSTANT
     family = MONOMIAL
     initial_condition = 0.0
   []
-  [dir_y]
+  [var_01]
+    order = CONSTANT
+    family = MONOMIAL
+    initial_condition = 0.0
+  []
+  [var_02]
+    order = CONSTANT
+    family = MONOMIAL
+    initial_condition = 0.0
+  []
+
+  [var_10]
+    order = CONSTANT
+    family = MONOMIAL
+    initial_condition = 0.0
+  []
+  [var_11]
+    order = CONSTANT
+    family = MONOMIAL
+    initial_condition = 0.0
+  []
+  [var_12]
+    order = CONSTANT
+    family = MONOMIAL
+    initial_condition = 0.0
+  []
+
+  [var_20]
+    order = CONSTANT
+    family = MONOMIAL
+    initial_condition = 0.0
+  []
+  [var_21]
+    order = CONSTANT
+    family = MONOMIAL
+    initial_condition = 0.0
+  []
+  [var_22]
     order = CONSTANT
     family = MONOMIAL
     initial_condition = 0.0
@@ -166,18 +167,79 @@
 
 #------------------------------------------------------------------------------#
 [AuxKernels]
-  # DIRECTION VERIFICATION
-  [dir_x_aux]
-    type = MaterialRealVectorValueAux
-    variable = dir_x
-    component = 0
-    property = fiber_direction_AF
+  [var_00_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_00
+    row = 0
+    column = 0
+    execute_on = 'TIMESTEP_END'
   []
-  [dir_y_aux]
-    type = MaterialRealVectorValueAux
-    variable = dir_y
-    component = 1
-    property = fiber_direction_AF
+  [var_01_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_01
+    row = 0
+    column = 1
+    execute_on = 'TIMESTEP_END'
+  []
+  [var_02_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_02
+    row = 0
+    column = 2
+    execute_on = 'TIMESTEP_END'
+  []
+
+  [var_10_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_10
+    row = 1
+    column = 0
+    execute_on = 'TIMESTEP_END'
+  []
+  [var_11_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_11
+    row = 1
+    column = 1
+    execute_on = 'TIMESTEP_END'
+  []
+  [var_12_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_12
+    row = 1
+    column = 2
+    execute_on = 'TIMESTEP_END'
+  []
+
+  [var_20_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_20
+    row = 2
+    column = 0
+    execute_on = 'TIMESTEP_END'
+  []
+  [var_21_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_21
+    row = 2
+    column = 1
+    execute_on = 'TIMESTEP_END'
+  []
+  [var_22_aux]
+    type = MaterialRealTensorValueAux
+    property = thcond_aniso
+    variable = var_22
+    row = 2
+    column = 2
+    execute_on = 'TIMESTEP_END'
   []
 []
 
@@ -268,31 +330,8 @@
     variable = T_y
     diffusion_coefficient = thermal_conductivity
   []
-
-  # AEH
-  #----------------------------------------------------------------------------#
-  [Heat_Conduction_TxAEH]
-    type = HeatConduction
-    variable = Tx_AEH
-    diffusion_coefficient = thermal_conductivity
-  []
-  [heat_rhs_x]
-    type = HomogenizedHeatConduction
-    variable = Tx_AEH
-    component = 0
-  []
-
-  [Heat_Conduction_TyAEH]
-    type = HeatConduction
-    variable = Ty_AEH
-    diffusion_coefficient = thermal_conductivity
-  []
-  [heat_rhs_y]
-    type = HomogenizedHeatConduction
-    variable = Ty_AEH
-    component = 1
-  []
 []
+
 #----------------------------------------------------------------------------#
 # END OF KERNELS
 
@@ -347,22 +386,36 @@
 
     prop_names = 'L'
     prop_values = '1e3'
-
-    outputs = exodus
-    output_properties = L
   []
 
   #----------------------------------------------------------------------------#
   # Grand Potential Interface Parameters
   [iface]
-    # reproduce the parameters from GrandPotentialMultiphase.i
     type = GrandPotentialInterface
     gamma_names = 'gamma_fg'
     sigma = '0.01'
     kappa_name = kappa
     mu_name = mu
+  []
 
-    outputs = exodus
+  #------------------------------------------------------------------------------#
+  # Conservation check
+  [sum_eta]
+    type = ParsedMaterial
+    f_name = sum_eta
+    args = 'eta_f eta_g'
+
+    function = 'eta_f + eta_g'
+  []
+
+  [sum_h]
+    type = DerivativeParsedMaterial
+    f_name = sum_h
+    args = 'eta_f eta_g'
+
+    function = 'h_f + h_g'
+
+    material_property_names = 'h_f h_g'
   []
 
   #------------------------------------------------------------------------------#
@@ -371,12 +424,10 @@
     f_name = thermal_conductivity
     args = 'eta_f eta_g'
 
-    function = 'h_f*100 + h_g*1'
+    function = 'h_f*100.0 + h_g*1.0'
 
     material_property_names = 'h_f(eta_f,eta_g) h_g(eta_f,eta_g)'
 
-    outputs = exodus
-    output_properties = thermal_conductivity
   []
 
   [th_cond_AF]
@@ -384,18 +435,15 @@
     f_name = th_cond_AF
     args = 'eta_f eta_g'
 
-    function = 'h_f*100 + h_g*0.0'
+    function = 'h_f*100.0 + h_g*0.0'
 
     material_property_names = 'h_f(eta_f,eta_g) h_g(eta_f,eta_g)'
-
-    outputs = exodus
-    output_properties = th_cond_AF
   []
 
   #------------------------------------------------------------------------------#
   # Tensor Transformation #
   #------------------------------------------------------------------------------#
-  # FiberDirection transforms the artificial heat flux into the normalized fiber direction
+  # FiberDirection transforms the temperature gradient into the normalized fiber direction
   [direction_AF]
     type = FiberDirectionAF
     temp_x = T_x
@@ -404,43 +452,52 @@
     thermal_conductivity = th_cond_AF
     vector_name = fiber_direction_AF
 
-    outputs = exodus
+    correct_negative_directions = false
+    angle_tol = 60
+    norm_tol = 1
   []
 
-  #------------------------------------------------------------------------------#
-  # DIRECTION VERIFICATION
-  # Average fiber direction
-  [dir_x_mat]
-    type = ParsedMaterial
-    f_name = dir_x_mat
-    args = dir_x
-    function = 'h_f * dir_x'
-    material_property_names = 'h_f'
-    outputs = exodus
+  # MobilityRotationVector calculates the transformed tensor given the fiber direction
+  [transformation]
+    type = MobilityRotationVector
+    M_A = thcond_f
+    direction_vector = fiber_direction_AF
+    M_name = rot_thcond_f
   []
-  [dir_y_mat]
-    type = ParsedMaterial
-    f_name = dir_y_mat
-    args = dir_y
-    function = 'h_f * dir_y'
-    material_property_names = 'h_f'
-    outputs = exodus
+  #----------------------------------------------------------------------------#
+  # Thermal conductivity
+  # In step 1, the value with the longitudinal thermal conductivity is ii
+  [thcond_f]
+    type = ConstantAnisotropicMobility
+    tensor = '7.4576e+06      0             0
+              0               7.4576e+04    0
+              0               0             7.4576e+04'
+
+    M_name = thcond_f
   []
 
-  [angle_degree_mat]
-    type = ParsedMaterial
-    f_name = angle_mat
-    args = 'dir_x dir_y'
+  # In step 1, thcond_g should be all zeros
+  [thcond_g]
+    type = ConstantAnisotropicMobility
+    tensor = '0      0    0
+              0      0    0
+              0      0    0'
 
-    function = 'h_f * atan(dir_y/dir_x) * 180/ pi'
-
-    constant_names = 'pi'
-    constant_expressions = '3.14159265358979323846'
-
-    material_property_names = 'h_f'
-    outputs = exodus
+    M_name = thcond_g
   []
-[]
+
+  # Creates a compound tensor for the entire domain
+  [thcond_composite]
+    type = CompositeMobilityTensor
+    args = 'eta_f eta_g'
+
+    weights = 'h_f            h_g'
+    tensors = 'rot_thcond_f   thcond_g'
+
+    M_name = thcond_aniso
+  []
+
+[] # End of Materials
 
 #------------------------------------------------------------------------------#
 [BCs]
@@ -479,7 +536,7 @@
     type = SMP
     full = true
     solve_type = NEWTON
-    petsc_options_iname = '-pc_type  -pc_hypre_type  -ksp_gmres_restart -pc_hypre_boomeramg_strong_threshold'
+    petsc_options_iname = '-pc_type  -pc_hypre_type  -ksp_gmres_restart  -pc_hypre_boomeramg_strong_threshold'
     petsc_options_value = 'hypre     boomeramg       31                  0.7'
   []
 []
@@ -501,11 +558,12 @@
   nl_rel_tol = 1.0e-8
 
   l_max_its = 30
-  l_tol = 1.0e-6
+  l_tol = 1.0e-8
 
   start_time = 0.0
-  dt = 1
-  num_steps = 1
+  end_time = 200
+
+  dtmin = 1e-6
 
   verbose = true
 
@@ -516,6 +574,19 @@
   line_search_package = petsc
 
   scheme = bdf2
+
+  [TimeStepper]
+    type = IterationAdaptiveDT
+    dt = 1
+
+    growth_factor = 1.2
+    cutback_factor = 0.83333
+
+    optimal_iterations = 4 # Number of nonlinear
+    linear_iteration_ratio = 10 # Ratio of linear to nonlinear
+
+    iteration_window = 0
+  []
 []
 
 #------------------------------------------------------------------------------#
@@ -526,77 +597,64 @@
 #       #    #  #    #    #
 #        ####    ####     #
 #------------------------------------------------------------------------------#
-
-#------------------------------------------------------------------------------#
 [Postprocessors]
-  # Area of carbon fiber
-  [./int_h_f]
+  # Species output
+  [int_h_f]
     type = ElementIntegralMaterialProperty
     mat_prop = h_f
     execute_on = 'TIMESTEP_END FINAL'
 
     allow_duplicate_execution_on_initial = true
 
-    outputs = 'csv exodus'
-  [../]
-
-  # DIRECTION VERIFICATION
-  # Integral direction component inside the fiber = h_f * component
-  [dir_x_pp]
-    type = ElementIntegralMaterialProperty
-    mat_prop = 'dir_x_mat'
-    execute_on = 'TIMESTEP_END FINAL'
-
-    outputs = 'csv exodus'
-  []
-  [dir_y_pp]
-    type = ElementIntegralMaterialProperty
-    mat_prop = 'dir_y_mat'
-    execute_on = 'TIMESTEP_END FINAL'
-
-    outputs = 'csv exodus'
+    outputs = 'exodus console'
   []
 
-  # Average tensor components
-  [ave_dir_x]
-    type = FunctionValuePostprocessor
-    function = 'dir_x_func'
-    execute_on = 'TIMESTEP_END FINAL'
-
-    outputs = 'csv exodus'
+  #----------------------------------------------------------------------------#
+  # Stats
+  [dt]
+    type = TimestepSize
   []
-  [ave_dir_y]
-    type = FunctionValuePostprocessor
-    function = 'dir_y_func'
-    execute_on = 'TIMESTEP_END FINAL'
-
-    outputs = 'csv exodus'
+  [alive_time]
+    type = PerfGraphData
+    data_type = TOTAL
+    section_name = 'Root'
   []
-
-  [ave_angle_degree_pp]
-    type = FunctionValuePostprocessor
-    function = 'ave_angle_degree_func'
-    execute_on = 'TIMESTEP_END FINAL'
-
-    outputs = 'console csv exodus'
+  [mem_total_physical_mb]
+    type = MemoryUsage
+    mem_type = physical_memory
+    mem_units = megabytes
+    value_type = total
   []
-
-  [ave_angle_rad_pp]
-    type = FunctionValuePostprocessor
-    function = 'ave_angle_rad_func'
-    execute_on = 'TIMESTEP_END FINAL'
-
-    outputs = 'csv exodus'
+  [mem_max_physical_mb]
+    type = MemoryUsage
+    mem_type = physical_memory
+    mem_units = megabytes
+    value_type = max_process
   []
 []
 
 #------------------------------------------------------------------------------#
 [Outputs]
+  [console]
+    type = Console
+    fit_mode = 160
+    max_rows = 10
+  []
+
   [exodus]
     type = Exodus
   []
 
-  [csv]
-    type = CSV
+  [pgraph]
+    type = PerfGraphOutput
+    execute_on = 'final'
+    level = 2
+    heaviest_branch = true
+    heaviest_sections = 2
   []
+[]
+
+#------------------------------------------------------------------------------#
+[Debug]
+  show_var_residual_norms = true
 []

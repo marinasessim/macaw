@@ -18,11 +18,11 @@
 
     xmin = 0
     xmax = 557280 # 120 microns
-    nx = 120
+    nx = 12
 
     ymin = 0
     ymax = 557280 # 120 microns
-    ny = 120
+    ny = 12
   []
 []
 
@@ -130,31 +130,31 @@
     type = BoundingBoxIC
     variable = eta_f
 
-    x1 = 255420 # 55
+    x1 = 232200 # 50
     y1 = 46440 # 10
 
-    x2 = 301860 # 65
+    x2 = 325080 # 70
     y2 = 510840 # 110
 
     inside = 1.0
     outside = 0.0
 
-    int_width = 4644
+    int_width = 0
   []
   [IC_eta_g]
     type = BoundingBoxIC
     variable = eta_g
 
-    x1 = 255420 # 55
+    x1 = 232200 # 50
     y1 = 46440 # 10
 
-    x2 = 301860 # 65
+    x2 = 325080 # 70
     y2 = 510840 # 110
 
     inside = 0.0
     outside = 1.0
 
-    int_width = 4644
+    int_width = 0
   []
 
   [IC_Tx]
@@ -887,5 +887,13 @@
 
   [csv]
     type = CSV
+  []
+
+  [pgraph]
+    type = PerfGraphOutput
+    execute_on = 'final'
+    level = 2
+    heaviest_branch = true
+    heaviest_sections = 2
   []
 []

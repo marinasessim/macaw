@@ -1,13 +1,25 @@
 [Tests]
-  [test1]
+  [1_direction_calculation]
     type = 'Exodiff'
     input = 'fiber_direction.i'
     exodiff = 'fiber_direction_exodus.e'
+
+    requirement = 'This test computes a value for the direction of a vertical carbon fiber.'
   []
 
-  [test2]
+  [2_tensor_rotation]
     type = 'Exodiff'
     input = 'th_cond_tensor_rotation.i'
     exodiff = 'th_cond_tensor_rotation_exodus.e'
+
+    requirement = 'This test computes an anisotropic thermal conductivity tensor based on the fiber direction.'
+  []
+
+  [3_tensor_transfer]
+    type = 'Exodiff'
+    input = 'tensor_transfer.i'
+    exodiff = 'tensor_transfer_exodus.e'
+
+    requirement = 'This test reads 9 variables from a solution UO and assembles a tensor as a RealTensorValue.'
   []
 []
